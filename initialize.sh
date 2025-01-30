@@ -1,6 +1,6 @@
-pushd DistributedSystemsHandling/InterNodeCommunication/protofiles/
+cd protofiles/
 ./generate_cpp.sh
-popd
+cd ../
 cmake -S . -B out/build
 cd out/build
 make

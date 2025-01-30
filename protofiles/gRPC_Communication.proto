@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+service CommunicationService{
+ rpc getFile(FileRequest) returns (stream FileChunk);
+ rpc sendFileInfo(FileInfo) returns (isReceived);
+ rpc sendNodeInfo(NodeInfo) returns (isReceived);
+
+ rpc sendSignal(isReceived) returns (isReceived);// Just using as a dataType
+}
+message FileChunk{
+ bytes data=1;
+ int64 chunk_number=2;
+ int64 size=3;
+}
+message FileRequest {
+  int64 startFrom=1;
+  string task=2;
+  string fileName=3;
+  string extension=4;
+}
+message NodeInfo{
+  string ipPort=1;
+}
+message FileInfo{
+  string filePath=1;
+}
+
+message isReceived{
+  bool received=1;
+};
+

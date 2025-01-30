@@ -124,7 +124,8 @@ This is an example of how to list things you need to use the software and how to
     ```
 5. Installation </br>a. For Windows: If you use windows you will have to work with docker or WSL.
       ```bash
-      docker run -it map_reduce -w /project
+      docker build -t map_reduce .
+      docker run -it map_reduce
       ```
       b. For Linux : Make sure cmake is not installed initially as we will use newer version of cmake installed through grpc
       ```bash
@@ -137,7 +138,13 @@ This is an example of how to list things you need to use the software and how to
       ```bash
       export PATH="$HOME/.local/bin:$PATH"
       ``` 
-      and then run the installation command.
+      and then run the compilation command.
+7. Linking You working directory to project container
+    ```bash
+    docker run -it -v ./:/project map_reduce 
+    # Assuming that you are docker from source directory 
+    # i.e, where dockerfile is located
+    ```
 
 </br>
 

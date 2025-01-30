@@ -1,2 +1,0 @@
-add_subdirectory(InterNodeCommunication)
-add_subdirectory(NodeHandling)
