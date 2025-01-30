@@ -142,12 +142,15 @@ This is an example of how to list things you need to use the software and how to
 7. Linking You working directory to project container
     ```bash
     docker run -it -v ./:/project map_reduce 
-    # Assuming that you are docker from source directory 
+    # Assuming that you are in source directory 
     # i.e, where dockerfile is located
     ```
 
 </br>
 
+### Tips
+1. For Understanding Read [Map Reduce Paper](https://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf).
+2. You can tune a few parameters for this read [parameters.md](https://github.com/MaheshG11/MapReduce/blob/master/parameters.md)
     
   
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
