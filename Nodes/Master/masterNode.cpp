@@ -38,7 +38,7 @@ grpc::Status MasterServer::sendNodeInfo(::grpc::ClientContext* context, const ::
         this->workers++;
         this->stubs_lock.unlock();
     }
-    response->set_received(true);
+    response->set_received((int32_t)1);
     return grpc::Status::OK;
 }
 grpc::Status MasterServer::sendSignal(::grpc::ClientContext* context, const ::isReceived* request, ::isReceived* response){
@@ -55,7 +55,7 @@ grpc::Status MasterServer::sendSignal(::grpc::ClientContext* context, const ::is
         std::map<std::string,std::unique_ptr<CommunicationService::Stub>>::iterator it=(this->stubs).end();
         int reducers=(this->workers)-(this->mappers);
         isReceived response,request;
-        request.set_received(true);
+        request.set_received((int32_t)1);
         grpc::ClientContext context;
         grpc::Status status;
         while(reducers--){
@@ -65,35 +65,33 @@ grpc::Status MasterServer::sendSignal(::grpc::ClientContext* context, const ::is
     }
     return grpc::Status::OK;
 }
-void MasterServer::BroadcastFilePathToReducers(std::string &filePath){
+void MasterServer::BroadcastFilePathToReducers(const ::FileInfo* request){
     std::map<std::string,std::unique_ptr<CommunicationService::Stub>>::iterator it=(this->stubs).end();
     int reducers=(this->workers)-(this->mappers);
     isReceived response;
-    FileInfo request;
-    request.set_filepath(filePath);
     grpc::ClientContext context;
     grpc::Status status;
     while(reducers--){
         it--;
-        status=(it->second)->sendFileInfo(&context,request,&response);
+        status=(it->second)->sendFileInfo(&context,(*request),&response);
     }
 }
-int MasterServer::getWorkers(){
+int32_t MasterServer::getWorkers(){
     return this->workers;
 }
 
 grpc::Status MasterServer::sendFileInfo(::grpc::ClientContext* context, const ::FileInfo* request, ::isReceived* response){
-    // This function is used for registering the nodes with master    
+    
+    // TODO try to get BroadcastFilePathToReducers task in detached mode
+    BroadcastFilePathToReducers(request);
 
-    //TODO implement is ipPort valid check
-    std::string filePath=request->filepath();
-    BroadcastFilePathToReducers(filePath);
-    response->set_received(true);
+    response->set_received((int32_t)1);
     return grpc::Status::OK;
+
 }
 
 
-void MasterServer::start(int mappers,int reducers){   
+void MasterServer::start(int32_t mappers,int32_t reducers){   
     std::cout<<"Setting up...\n";
     this->executing=true;
     this->mappers=mappers;
@@ -101,20 +99,21 @@ void MasterServer::start(int mappers,int reducers){
     this->working=mappers+reducers;
     grpc::ClientContext context;
     isReceived request,response;
-    request.set_received(true);
+    
+    
     grpc::Status status;
     // executing_lock.lock();
     stubs_lock.lock();
-    // std::unique_lock<std::mutex> stubs_lock(stubs_mtx);
     std::map<std::string,std::unique_ptr<CommunicationService::Stub
         >>::iterator it=(this->stubs).end();
     while(reducers--){
         it--;
+        request.set_received(-reducers);
         status=(it->second)->sendSignal(&context,request,&response);   
         // start Execution Reducers
     }
     it=(this->stubs).begin();
-    request.set_received(false);
+    request.set_received(this->reducers);
     while(mappers--){
         status=(it->second)->sendSignal(&context,request,&response);
         // start Execution Mappers
@@ -134,7 +133,7 @@ void RunMasterServer(std::string &ipPort,MasterServer &ServerImplementation){
     builder.AddListeningPort(ipPort,grpc::InsecureServerCredentials());
     builder.RegisterService(&ServerImplementation);
     std::unique_ptr<grpc::Server> master_server(builder.BuildAndStart());
-   
+    std::cout<<"started Master Server at : "<<getLocalIP()<<"\nWith this setting on Machine : "<<ipPort<<'\n';
     while(true){
         std::cout<< "Enter \'1\' to start execution of the Process\n";
         // std::cout<<"Enter \'2\' to Change ipPort\n"; TODO

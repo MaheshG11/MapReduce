@@ -23,9 +23,10 @@ message NodeInfo{
 }
 message FileInfo{
   string filePath=1;
+  string ipPort=2;
 }
 
 message isReceived{
-  bool received=1;
+  int32 received=1;
 };
 
