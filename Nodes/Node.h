@@ -7,7 +7,9 @@
 #include <memory>
 #include <fstream>
 #include <vector>
-
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 // const std::string folderPath;
 //Server
 class NodeServer : public CommunicationService :: Service{
@@ -18,20 +20,30 @@ class NodeServer : public CommunicationService :: Service{
  public:
   NodeServer(std::string &folderPath);
   ~NodeServer() override;
-  ::grpc::Status getFile(::grpc::ServerContext* context, const ::FileRequest* request, ::grpc::ServerWriter< ::FileChunk>* writer)override;
+  ::grpc::Status getFile(::grpc::ServerContext* context, const ::FileRequest* 
+                  request, ::grpc::ServerWriter< ::FileChunk>* writer)override;
+
   void setFolderPath(std::string &folderpath);
 };
 
 //Client
 class NodeClient {
- private:
-  std::map<std::string,std::unique_ptr<CommunicationService::Stub>> stubs;
-  std::string folderPath;
+  private:
+  std::unordered_map<std::string,std::unique_ptr<CommunicationService::Stub>> stubs;
+  
  public:
-  NodeClient(std::string &folderPath);
-  void addStub(std::string ipPort); 
-  void setFolderPath(std::string &folderpath);
-  void getFile(int64_t startFrom,std::string fileName,std::string task,std::string,std::string extension,std::string ipPort,std::string filePath);
+  bool sendNodeInfo();// Will register/subscribe this worker with master 
+  std::string folderPath;
+  std::string master_ipPort,ipPort;
+  std::unique_ptr<CommunicationService::Stub> master_stub;
+
+  
+  NodeClient(std::string &folderPath,std::string master_ipPort);
+  std::unique_ptr<CommunicationService::Stub>& getStub(std::string &ipPort);
+  void getFile(int64_t startFrom,std::string fileName,std::string task,std::string,
+  std::string extension,std::unique_ptr<CommunicationService::Stub>& stub,std::string filePath);
+  bool sendFileInfo(std::string &filePath);
+  void sendSignal();
 };
 
 std::string getLocalIP();

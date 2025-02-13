@@ -7,18 +7,20 @@
 #include <grpcpp/grpcpp.h>
 #include <memory>
 #include <vector>
-
-
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <filesystem>
 
 
 // Server Code
 
 // Constructor
-NodeServer::NodeServer(std::string &folderPath)folderPath(folderPath) {
+NodeServer::NodeServer(std::string &folder_path)folderPath(folder_path) {
+  std::filesystem::create_directories(folder_path);
 }
 // Destructor
-NodeServer::~NodeServer() {
-}
+NodeServer::~NodeServer() {}
 grpc::Status NodeServer::getFile(grpc::ServerContext* context, 
  const FileRequest* fileRequest,
  grpc::ServerWriter<FileChunk>* writer){
@@ -48,19 +50,29 @@ void NodeServer::setFolderPath(std::string &folderpath){
 
 
 //Client Code
-NodeClient::NodeClient(std::string &folderPath)
-{
- this->folderPath=folderPath;
+NodeClient::NodeClient(std::string &folderPath,std::string master_ipPort):
+folderPath(folderPath),master_ipPort(master_ipPort){
+  this->master_stub=CommunicationService::NewStub(grpc::CreateChannel(ipPort,
+                    grpc::InsecureChannelCredentials()));
+  this->ipPort=getLocalIP();
 }
 
-
-void NodeClient::addStub(std::string ipPort){
-  (this->stubs)[ipPort]=CommunicationService::NewStub(grpc::CreateChannel(ipPort,
-   grpc::InsecureChannelCredentials()));
+std::unique_ptr<CommunicationService::Stub>& NodeClient::getStub(std::string &ipPort){
+std::unordered_map<std::string,std::unique_ptr<CommunicationService::Stub>>::iterator it=(this->stubs).find(ipPort);
+  if(it==(this->stubs).end())
+    // std::pair<iterator, bool> unordered_map::insert(pair<k,v>);
+    return ((this->stubs).insert(
+      std::make_pair(
+        ipPort,
+        CommunicationService::NewStub(
+        grpc::CreateChannel(ipPort,grpc::InsecureChannelCredentials()))
+        )
+      )).first->second;
+  return it->second;
 }
 
-
-void NodeClient::getFile(int64_t startFrom,std::string fileName,std::string task,std::string,std::string extension,std::string ipPort,std::string filePath){
+void NodeClient::getFile(int64_t startFrom,std::string fileName,std::string task,std::string extension,std::unique_ptr<CommunicationService::Stub>& stub
+,std::string &filePath){
  FileRequest request;
  grpc::ClientContext context;
  FileChunk chunk;
@@ -68,22 +80,58 @@ void NodeClient::getFile(int64_t startFrom,std::string fileName,std::string task
  request.set_task(task);
  request.set_extension(extension);
  request.set_startfrom(startFrom);
- std::ofstream file(filePath, std::ios::out | std::ios::binary); 
- std::unique_ptr<grpc::ClientReader<FileChunk>> reader(stubs[ipPort]->getFile(&context,request));
+ std::ofstream file(filePath, std::ios::out | std::ios::binary);
+ std::unique_ptr<grpc::ClientReader<FileChunk>> reader(stub->getFile(&context,request));
  while(reader->Read(&chunk)){
   file.write(chunk.data().data(),chunk.size());
  }
  grpc::Status status = reader->Finish();
   if (status.ok()) {
-      std::cout << "ListFeatures rpc succeeded." << std::endl;
+      std::cout << "File Download succeeded." << std::endl;
     }
     else {
       std::cerr<<status.error_message()<<'\n';
-      std::cerr << "ListFeatures rpc failed." << std::endl;
+      std::cerr << "File Download failed." << std::endl;
     }
 
 }
-
+bool NodeClient::sendNodeInfo(){// Will register/subscribe this worker with master 
+  NodeInfo request;
+  isReceived response;
+  grpc::ClientContext context;
+  grpc::Status status;
+  std::string localIp=getLocalIP();
+  cout<<"Local IP : "<<localIp<<"\nSending this info to node for registration\n";
+  request.set_ipport(localIp);
+  status=(this->master_stub)->sendNodeInfo(&context,request,&response);
+  if(status.ok()){
+    std::cout<<"Node Registered Successfully\n";
+    return true;
+  }
+  
+  std::cout<<"Node did not Registered \n";
+  return false;
+  
+}
+bool NodeClient::sendFileInfo(std::string &filepath){
+  FileInfo request;
+  isReceived response;
+  grpc::ClientContext context;
+  grpc::Status status;
+  request.set_filepath(filepath);
+  request.set_ipport(this->ipPort);
+  status=(this->master_stub)->sendFileInfo(&context,request,&response);
+  return true;
+}
+bool NodeClient::sendSignal(){
+  isReceived request;
+  isReceived response;
+  grpc::ClientContext context;
+  grpc::Status status;
+  request->set_received((int32_t)1);
+  status=(this->master_stub->sendSignal)(&context,request,&response);
+  return true;
+}
 void NodeClient::setFolderPath(std::string &folderpath){
   this->folderPath=folderpath;
 }

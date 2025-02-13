@@ -3,6 +3,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <fstream>
 template <class K,class V>
 class mapper:public NodeClient{
     private: 
