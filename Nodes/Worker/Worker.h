@@ -2,10 +2,10 @@
 #define Worker
 #include "../Node.h"
 #include <iostream>
-#include "gRPC_Communication.grpc.pb.h"
-#include "gRPC_Communication.pb.h"
-#include <fstream>
+#include "protofiles/gRPC_Communication.grpc.pb.h"
+#include "protofiles/gRPC_Communication.pb.h"
 #include <grpcpp/grpcpp.h>
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <mutex>

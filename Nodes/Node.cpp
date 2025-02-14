@@ -1,22 +1,25 @@
 // #include <algorithm>
-#include "Node.h"
+
 #include <iostream>
-#include "gRPC_Communication.grpc.pb.h"
-#include "gRPC_Communication.pb.h"
-#include <fstream>
+#include "protofiles/gRPC_Communication.grpc.pb.h"
+#include "protofiles/gRPC_Communication.pb.h"
 #include <grpcpp/grpcpp.h>
+#include "Node.h"
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <net/if.h>
+
 #include <filesystem>
 
 
 // Server Code
 
 // Constructor
-NodeServer::NodeServer(std::string &folder_path)folderPath(folder_path) {
+NodeServer::NodeServer(std::string &folder_path):folderPath(folder_path) {
   std::filesystem::create_directories(folder_path);
 }
 // Destructor
@@ -101,7 +104,7 @@ bool NodeClient::sendNodeInfo(){// Will register/subscribe this worker with mast
   grpc::ClientContext context;
   grpc::Status status;
   std::string localIp=getLocalIP();
-  cout<<"Local IP : "<<localIp<<"\nSending this info to node for registration\n";
+  std::cout<<"Local IP : "<<localIp<<"\nSending this info to node for registration\n";
   request.set_ipport(localIp);
   status=(this->master_stub)->sendNodeInfo(&context,request,&response);
   if(status.ok()){
@@ -128,7 +131,7 @@ bool NodeClient::sendSignal(){
   isReceived response;
   grpc::ClientContext context;
   grpc::Status status;
-  request->set_received((int32_t)1);
+  request.set_received((int32_t)1);
   status=(this->master_stub->sendSignal)(&context,request,&response);
   return true;
 }

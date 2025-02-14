@@ -1,6 +1,10 @@
 #include <iostream>
+#include "protofiles/gRPC_Communication.grpc.pb.h"
+#include "protofiles/gRPC_Communication.pb.h"
+#include <grpcpp/grpcpp.h>
 #include <vector>
 #include "Mapper.h"
+
 #include <map> 
 constexpr int32_t zero=0;
 template<class K, class V>
@@ -13,7 +17,7 @@ template<class K, class V>
 void mapper<K,V>::keepBusy(){
     while(true){
         isBusy_lock.lock();
-        isBusy_cv.wait(isBusy_lock,[this]{return writer_buffer.size()>zero});
+        isBusy_cv.wait(isBusy_lock,[this]{return writer_buffer.size()>zero;});
         std::unique_ptr<std::vector<std::pair<K,V>>> map_ptr=std::move(writer_buffer.back());
         writer_buffer.pop_back();
         isBusy_lock.unlock();        

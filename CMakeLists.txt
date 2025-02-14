@@ -13,8 +13,8 @@ find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 
 add_subdirectory(protofiles)
-add_executable(Node main.cpp)
+# add_executable(Node main.cpp)
 
-target_link_libraries(Node
-    Master
-)
+# target_link_libraries(Node
+    # Master
+# )

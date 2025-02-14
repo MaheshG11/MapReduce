@@ -1,8 +1,8 @@
 #include <iostream>
-#include "../../protofiles/gRPC_Communication.grpc.pb.h"
-#include "../../protofiles/gRPC_Communication.pb.h"
+#include "protofiles/gRPC_Communication.grpc.pb.h"
+#include "protofiles/gRPC_Communication.pb.h"
 #include <grpcpp/grpcpp.h>
-#include "../Node.h"
+#include "Node.h"
 #include "masterNode.h"
 #include <memory>
 #include <fstream>

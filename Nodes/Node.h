@@ -1,13 +1,15 @@
 #ifndef Node
 #define Node
 #include <iostream>
-#include "gRPC_Communication.grpc.pb.h"
-#include "gRPC_Communication.pb.h"
+#include "protofiles/gRPC_Communication.grpc.pb.h"
+#include "protofiles/gRPC_Communication.pb.h"
 #include <grpcpp/grpcpp.h>
 #include <memory>
 #include <fstream>
 #include <vector>
 #include <ifaddrs.h>
+#include <net/if.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 // const std::string folderPath;
@@ -37,13 +39,13 @@ class NodeClient {
   std::string master_ipPort,ipPort;
   std::unique_ptr<CommunicationService::Stub> master_stub;
 
-  
+  void setFolderPath(std::string &folderpath);
   NodeClient(std::string &folderPath,std::string master_ipPort);
   std::unique_ptr<CommunicationService::Stub>& getStub(std::string &ipPort);
-  void getFile(int64_t startFrom,std::string fileName,std::string task,std::string,
-  std::string extension,std::unique_ptr<CommunicationService::Stub>& stub,std::string filePath);
+  void getFile(int64_t startFrom,std::string fileName,std::string task,
+  std::string extension,std::unique_ptr<CommunicationService::Stub>& stub,std::string& filePath);
   bool sendFileInfo(std::string &filePath);
-  void sendSignal();
+  bool sendSignal();
 };
 
 std::string getLocalIP();

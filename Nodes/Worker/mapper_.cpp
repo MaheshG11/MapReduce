@@ -1,11 +1,13 @@
+#include "protofiles/gRPC_Communication.grpc.pb.h"
+#include "protofiles/gRPC_Communication.pb.h"
+#include <grpcpp/grpcpp.h>
 #include "Mapper/Mapper.h"
-
 class myTask:public mapper<std::string,int>{
-    '''
+    /*
     substitute string , int with some other datatype that you want as 
     key,value, note it must be a datatype which which can be used with
     cout<<key<<value;// and note this line must not be space seperated;
-    '''
+    */
     myTask(std::string folderPath,std::string master_ipPort,int32_t mappers
         ,int32_t num_entries,std::string input_file_path):
         mapper(folderPath,master_ipPort,mappers,num_entries,input_file_path){}
@@ -32,6 +34,6 @@ class myTask:public mapper<std::string,int>{
 int main(int argc, char* argv[]){
     //args = folderPath,master_ipPort,mappers,num_entries,input_file_path
     // ignore these
-    myTask taskOBJ(argv[1],argv[2],argv[3],argv[4],argv[5]);
-    taskOBJ.start();
+    // myTask taskOBJ(argv[1],argv[2],argv[3],argv[4],argv[5]);
+    // taskOBJ.start();
 }
